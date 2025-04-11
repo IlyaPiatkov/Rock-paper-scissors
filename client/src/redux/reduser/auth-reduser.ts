@@ -123,8 +123,13 @@ export const login = (
 
 export const logout = (): RootThunkType => async (dispatch, getState) => {
   try {
-    const authToken = getState().auth.access
-    const data = await authAPI.logout(authToken)
+    const { access, refresh } = getState().auth
+
+    if (!access || !refresh) {
+      return
+    }
+
+    const data = await authAPI.logout(access, refresh)
 
     if (data.resultCode === ResultCodeEnum.Success) {
       dispatch(setUserData(initialState))
@@ -144,7 +149,7 @@ export const relogin = (oldRefresh: string | null): RootThunkType => async (
 ) => {
   try {
     const { userId, email } = getState().auth
-    const data = await authAPI.relogin(oldRefresh)
+    const data = await authAPI.relogin(oldRefresh, String(userId))
 
     if (data.resultCode === ResultCodeEnum.Success) {
       const { access, refresh, tokenExpire } = data.data
